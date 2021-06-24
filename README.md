@@ -16,10 +16,17 @@ crc stop
 - add getops to bash script (launch and delete
 
 ```
+
+- SSH into the instance
+```
+EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal" "Name=availability-zone,Values=ap-south-1a" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
+ssh fedora@$EIP
+```
+
 - Configure Local machine to use CRC on Spot
 ```
 sudo rm /usr/local/etc/dnsmasq.d/crc.conf ;
-EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal" "Name=availability-zone,Values=ap-south-1a" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
+EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal" "Name=availability-zone,Values=ap-south-1a" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
 echo "address=/apps-crc.testing/$EIP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
 echo "address=/api.crc.testing/$EIP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
 sudo brew services restart dnsmasq ;

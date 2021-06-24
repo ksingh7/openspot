@@ -12,13 +12,13 @@ if [ -f "$CRC_XML_FILE" ]; then
     sudo virsh define ~/crc.xml
 fi
 
-echo "Settingup CRC ... "
+echo "Setting up CRC ... "
 crc setup
 
 if [ -n "$PULL_SECRET_PATH" ]; then
     echo "Starting CRC ... "
     crc start -p $PULL_SECRET_PATH
-elif  [ -f "~/pull-secret.txt" ]; then
+elif  [ -f ~/pull-secret.txt ]; then
     echo "Starting CRC ... "
     crc start -p ~/pull-secret.txt
 else
