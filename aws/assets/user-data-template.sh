@@ -94,5 +94,8 @@ sudo -u fedora crc config set consent-telemetry yes >> /var/log/crc_setup.log 2>
 sudo -u fedora crc config view >> /var/log/crc_setup.log 2>&1
 
 sudo -u fedora echo "===== CRC Setup Completed ====" >> /var/log/crc_setup.log 2>&1
+sudo -u wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
+sudo -u chmod +x /home/fedora/post_install.sh
 sudo -u fedora echo "===== You can now SSH into the instance for post installation setup ====" >> /var/log/crc_setup.log 2>&1
+sudo -u fedora echo "===== Post Installation scrip file location : /home/fedora/post_install.sh ====" >> /var/log/crc_setup.log 2>&1
 echo "completed" > /var/log/crc_status 2>&1 

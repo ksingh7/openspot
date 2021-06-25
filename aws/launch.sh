@@ -1,5 +1,6 @@
 #!/bin/bash
-#bash launch.sh ap-south-1 ap-south-1a true 
+#bash launch.sh -r ap-south-1 -a ap-south-1a -v false
+# Author: karan.singh731987@gmail.com , karan@redhat.com (Karan Singh)
 
 main() {
 #REGION=$1
@@ -26,14 +27,14 @@ fi
 # fi
 
 if [ -n "$REGION" ]; then
-    #echo "Launching instance in Region : $REGION ..."
+    :
 else
     REGION=$(aws configure get region)
     echo "No Region provided, launching instance in Region : $REGION ..."
 fi
 
 if [ -n "$AZ_NAME" ]; then
-    #echo "Launching instance in AZ : $AZ_NAME ..."
+    :
 else
     AZ_NAME="$REGION"a
     echo "No AZ provided, launching instance in AZ : $AZ_NAME ..."
@@ -109,6 +110,9 @@ echo "Please allow 5 minutes for instance configuration"
 sleep 180
 echo "Trying to tail instance setup logs ... "
 sleep 10
+
+echo "Applying TAG to Instance"
+#aws ec2 create-tags --resources $INSTANCE_ID --tags Key=environment,Value=crc Key=availability-zone,Value=$AZ_NAME
 
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
 ssh fedora@$EIP wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O post_install.sh

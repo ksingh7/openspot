@@ -15,10 +15,12 @@ fi
 echo "Setting up CRC ... "
 crc setup
 
+PULL_SECRET_FILE=~/pull-secret.txt
+
 if [ -n "$PULL_SECRET_PATH" ]; then
     echo "Starting CRC ... "
     crc start -p $PULL_SECRET_PATH
-elif  [ -f ~/pull-secret.txt ]; then
+elif  [ -f "$PULL_SECRET_FILE" ]; then
     echo "Starting CRC ... "
     crc start -p ~/pull-secret.txt
 else

@@ -1,5 +1,5 @@
 #!/bin/bash
-# bash destroy.sh false ap-south-1 ap-south-1a true
+# bash destroy.sh -r ap-south-1 -a ap-south-1a -d false -v false
 # Author: karan.singh731987@gmail.com , karan@redhat.com (Karan Singh)
 
 main() {
