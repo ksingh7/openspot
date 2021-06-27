@@ -54,7 +54,6 @@ bash launch.sh -r ap-south-1 -a ap-south-1a -v false
 - Instructions for `MacOS`
 ```
 brew install dnsmasq
-sudo brew services start dnsmasq
 mkdir -p /usr/local/etc/dnsmasq.d
 touch /usr/local/etc/dnsmasq.d/crc.conf
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal"  --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 

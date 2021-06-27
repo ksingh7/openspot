@@ -2,6 +2,7 @@
 # bash post_install.sh ~/pull-secret.txt true
 PULL_SECRET_PATH=$1
 EXPAND_CRC_DISK_SIZE=$2
+DEFAULT_PULL_SECRET_FILE=~/pull-secret.txt
 
 CRC_XML_FILE=~/crc.xml
 if [ -f "$CRC_XML_FILE" ]; then
@@ -15,14 +16,16 @@ fi
 echo "Setting up CRC ... "
 crc setup
 
-PULL_SECRET_FILE=~/pull-secret.txt
+
 
 if [ -n "$PULL_SECRET_PATH" ]; then
     echo "Starting CRC ... "
-    crc start -p $PULL_SECRET_PATH
-elif  [ -f "$PULL_SECRET_FILE" ]; then
+    crc config set pull-secret-file $PULL_SECRET_PATH
+    crc start
+elif  [ -f "$DEFAULT_PULL_SECRET_FILE" ]; then
     echo "Starting CRC ... "
-    crc start -p ~/pull-secret.txt
+    crc config set pull-secret-file $DEFAULT_PULL_SECRET_FILE
+    crc start
 else
     echo "Error: CRC Pull Secret not provided, Exiting..." 
     echo "Get your pull secret from https://cloud.redhat.com/openshift/create/local and save it as ~/pull-secret.txt"
@@ -50,7 +53,7 @@ if [ ! -f "$CRC_XML_FILE" ]; then
     echo "Dumping VM config in XML  ... "
     sudo virsh dumpxml crc > ~/crc.xml
     echo "Starting CRC ... "
-    crc start -p ~/pull-secret.txt
+    crc config set pull-secret-file $DEFAULT_PULL_SECRET_FILE
 fi
 
 sleep 10

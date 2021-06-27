@@ -112,11 +112,9 @@ echo "Trying to tail instance setup logs ... "
 sleep 10
 
 echo "Applying TAG to Instance"
-#aws ec2 create-tags --resources $INSTANCE_ID --tags Key=environment,Value=crc Key=availability-zone,Value=$AZ_NAME
+aws ec2 create-tags --resources $INSTANCE_ID --tags Key=environment,Value=crc Key=availability-zone,Value=$AZ_NAME > /dev/null
 
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
-ssh fedora@$EIP wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O post_install.sh
-ssh fedora@$EIP chmod +x post_install.sh
 ssh  fedora@$EIP tail -50f /var/log/crc_setup.log
 
 }
