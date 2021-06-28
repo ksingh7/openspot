@@ -59,7 +59,7 @@ echo "Deleting Key Pair ... [Done]"
 aws --region $REGION ec2 delete-key-pair --key-name crc-key-pair
 
 echo "Deleting Security Group... [Done]"
-aws ec2 delete-security-group --group-name crc-sg > /dev/null
+aws ec2 delete-security-group --group-name crc-sg > /dev/null 2>&1
 
 }
 
