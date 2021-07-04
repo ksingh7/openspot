@@ -1,4 +1,4 @@
-![OpenSpot](openspot.gif)
+![OpenSpot](assets/openspot.gif)
 ## tldr;
 1. Make sure AWS CLI is configured properly with right set of credentials and access to launch resources
 2. Execute the following to launch CRC on AWS Spot Instance
@@ -44,6 +44,7 @@ For example : You are a developer/architect, need a CRC environment daily for 4 
 - Cleanup
   - Destroy all AWS resources requested by openspot
 
+![OpenSpot Technical Architecture](assets/openspot-tech-arch.png)
 ## Setup
 ### Prerequisite
 - AWS CLI must be configured on local machines
