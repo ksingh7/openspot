@@ -66,7 +66,7 @@ else
     aws iam add-role-to-instance-profile --instance-profile-name crc-Instance-Profile --role-name crc-ec2-volume-role > /dev/null
 fi
 
-aws ec2 delete-security-group --group-name crc-sg > /dev/null
+aws ec2 delete-security-group --group-name crc-sg > /dev/null 2>&1
 
 IS_SG_EXISTS=$(aws ec2 describe-security-groups --filters "Name=tag:environment,Values=crc" --query "SecurityGroups[*].{Name:GroupName}" --output text)
 
@@ -112,7 +112,7 @@ echo "Trying to tail instance setup logs ... "
 sleep 10
 
 echo "Applying TAG to Instance"
-aws ec2 create-tags --resources $INSTANCE_ID --tags Key=environment,Value=crc Key=availability-zone,Value=$AZ_NAME > /dev/null
+aws ec2 create-tags --resources $INSTANCE_ID --tags 'Key=environment,Value=crc' 'Key=availability-zone,Value=$AZ_NAME' > /dev/null
 
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
 ssh  fedora@$EIP tail -50f /var/log/crc_setup.log

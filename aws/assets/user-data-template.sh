@@ -96,7 +96,7 @@ sudo -u fedora crc config view >> /var/log/crc_setup.log 2>&1
 
 if [[ "$POST_INSTALL" == "true" ]]; then
     sudo -u fedora echo "===== Running Post Install ... Please wait ====" >> /var/log/crc_setup.log 2>&1
-    sudo -u bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
+    sudo -u fedora bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now Exit from logs tail command by presing Ctrl+C ====" >> /var/log/crc_setup.log 2>&1
 else
     sudo -u wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh

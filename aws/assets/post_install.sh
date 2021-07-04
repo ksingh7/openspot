@@ -92,3 +92,4 @@ echo "Starting HAPROXY Service ..."
 sudo systemctl restart haproxy
 
 echo "========= Post Launch Configuration Completed Successfully =============="
+echo "========= You can now Exit from logs tail command by presing Ctrl+C ======="

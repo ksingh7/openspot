@@ -1,3 +1,12 @@
+![OpenSpot](openspot.gif)
+## tldr;
+1. Make sure AWS CLI is configured properly with right set of credentials and access to launch resources
+2. Execute the following to launch CRC on AWS Spot Instance
+```
+git clone https://github.com/ksingh7/openspot.git
+cd openspot/aws
+time bash launch.sh -r ap-south-1 -a ap-south-1a -v false
+```
 ## Preamble
 ### What is crc
 Red Hat CodeReady Containers (CRC) brings a minimal single node OpenShift 4 cluster to your local computer. This cluster provides a minimal OpenShift environment for development and testing purposes. [Read more](https://developers.redhat.com/products/codeready-containers/overview)
@@ -6,6 +15,10 @@ Red Hat CodeReady Containers (CRC) brings a minimal single node OpenShift 4 clus
 Amazon EC2 Spot Instances let you take advantage of unused EC2 capacity in the AWS datacenter. Spot Instances are available at up to a 90% discount compared to On-Demand prices. [Read more](https://aws.amazon.com/ec2/spot/)
 ### What is OpenSpot
 OpenSpot [Open~~Shift on~~ Spot ~~Instance~~] is a tool that helps you deploy CRC on AWS Spot Instances in a fully automated & resilient manner.
+The core idea of openspot is automate all the steps required to launch AWS Spot Instance and automatically configure CRC.
+OpenSpot allows you to tear down CRC spot instance and their associated resources, when you do not need it, that translates to further cost saving.
+
+For example : You are a developer/architect, need a CRC environment daily for 4 hours. You can use OpenSpot, launch your CRC environment and terminate after 4 hours, and just repeat this step daily. OpenSpot uses EBS volume to persist your CRC instance, destroying and re-creating OpenSpot instance, do not destroy the CRC VM that you are working on daily (unless you are deleting EBS volume)
 
 ##### Features of OpenSpot
 - Select Region & AZ of your choice
@@ -45,11 +58,105 @@ aws ec2 describe-instances
 git clone https://github.com/ksingh7/openspot.git
 cd openspot/aws
 ```
-## Setting up CRC
+## Deploy CRC on Spot Instance
+
 ```
-bash launch.sh -r ap-south-1 -a ap-south-1a -v false
+    usage launch.sh -r "AWS_Region_Name" -a "AWS_AZ_NAME" -v "true or false"
+    OPTIONS
+    -r "AWS Region Name : Optional, if not provided, will use AWS CLI default value"
+    -a "AWS Availablity Zone Name : Optional, if not provided, will use AWS CLI default value"
+    -v "Optional : Verbose Output, set either true or false, default value is false"
+    -h "Show help menu"
+```
+- To launch AWS Spot Instance in `ap-south-1` region and `ap-south-1a` availablity zone, execute
+```
+time bash launch.sh -r ap-south-1 -a ap-south-1a -v false
+```
+Sample output
+```
+$ time bash launch.sh -r ap-south-1 -a ap-south-1a -v false
+Need your SSH Public Key absolute path to create AWS Key Pair in the selected Region (ex: /Users/karasing/.ssh/id_rsa.pub) :
+Enter SSH Public Key Path [/Users/karasing/.ssh/id_rsa.pub]:
+New key-pair named crc-key-pair created in region ap-south-1...
+Creating IAM Role ...
+Adding policy to IAM Role ...
+Creating Instance Profile ...
+Adding Role to Instance Profile ...
+Creating Security Group ...
+Generating User-Data script file ...
+Generating Launch Specification file ...
+Launching SPOT Instance, Please Wait ...
+Please allow 5 minutes for instance configuration
+Trying to tail instance setup logs ...
+Applying TAG to Instance
+Warning: Permanently added '13.232.50.164' (ECDSA) to the list of known hosts.
+Installing required packages ... [Done]
+Setting up AWS Cli... [Done]
+Using existing EBS Volume ...
+...
+...
+Started the OpenShift cluster.
+
+The server is accessible via web console at:
+  https://console-openshift-console.apps-crc.testing
+
+Log in as administrator:
+  Username: kubeadmin
+  Password: wR3yN-HUxoo-HXktK-QNw3e
+
+Log in as user:
+  Username: developer
+  Password: developer
+
+Use the 'oc' command line interface:
+  $ eval $(crc oc-env)
+  $ oc login -u developer https://api.crc.testing:6443
+Setting up HAPROXY on host machine ...
+Starting HAPROXY Service ...
+========= Post Launch Configuration Completed Successfully ==============
+===== You can now Exit from logs tail command by presing Ctrl+C ====
+bash launch.sh -r ap-south-1 -a ap-south-1a -v false  
+9.87s user 12.99s system 3% cpu 9:55.69 total
 ```
 
+## Destroy your CRC Spot Instance
+When you are not using your CRC instance provisioned using OpenSpot, you can destroy that to save cost.
+
+You can choose to destroy just the AWS Spot Instance and keep the EBS volume if you want to restart your CRC instance and resume where you left last time Or you can destroy both Spot Instance and EBS volume.
+```
+    usage destroy.sh -r "AWS_Region_Name" -a "AWS_AZ_NAME" -d "true or false" -v "true or false"
+    OPTIONS
+    -r "AWS Region Name : Optional, if not provided, will use AWS CLI default value"
+    -a "AWS Availablity Zone Name : Optional, if not provided, will use AWS CLI default value"
+    -d "Delete EBS Volume (true or false), default = false"
+    -v "Optional, used for verbose output (true or false), default = false"
+    -h "Show help menu"
+```
+- To destroy just the AWS Spot Instance
+```
+bash destroy.sh -r ap-south-1 -a ap-south-1a -d false -v false
+```
+- To destroy both AWS Spot Instance and EBS volume
+```
+bash destroy.sh -r ap-south-1 -a ap-south-1a -d true -v false
+```
+- Sample Output
+```
+$ time bash destroy.sh -r ap-south-1 -a ap-south-1a -d false -v false
+Deleting CRC resources in Region : ap-south-1 ...
+Deleting CRC resources in AZ : ap-south-1a ...
+Terminating up Spot Instance ...
+Deleting Spot Request ...
+Detaching volume
+Removing Role from Instance Profile ... [Done]
+Deleting Role Policy ... [Done]
+Deleting Role ... [Done]
+Deleting Instance Profile ... [Done]
+Deleting Key Pair ... [Done]
+Deleting Security Group... [Done]
+bash destroy.sh -r ap-south-1 -a ap-south-1a -d false -v false  
+7.08s user 8.30s system 62% cpu 24.693 total
+```
 ### Configure Local Machine to use CRC running on Spot Instance
 - Instructions for `MacOS`
 ```
