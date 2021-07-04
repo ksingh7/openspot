@@ -23,7 +23,10 @@ else
     echo "No AZ provided, Deleting CRC resources inn AZ : $AZ_NAME ..."
 fi
 echo "Terminating up Spot Instance ..."
-EC2_INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal" "Name=instance-state-code,Values=16" "Name=availability-zone,Values=$AZ_NAME" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
+#To be removed later
+#EC2_INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal" "Name=instance-state-code,Values=16" "Name=availability-zone,Values=$AZ_NAME" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
+EC2_INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:environment,Values=crc" "Name=tag:availability-zone,Values=$AZ_NAME" "Name=instance-state-code,Values=16" "Name=availability-zone,Values=$AZ_NAME" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
+
 SG_ID=$(aws ec2 describe-security-groups --filter "Name=group-name,Values=crc-sg" --query 'SecurityGroups[*].[GroupId]' --output text)
 # Temporarily changing the security group of instance
 aws ec2 modify-instance-attribute --instance-id $EC2_INSTANCE_ID --groups $SG_ID > /dev/null

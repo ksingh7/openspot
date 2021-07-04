@@ -207,7 +207,17 @@ Kubeadmin Account
 ssh fedora@$EIP crc console --credentials
 # Get oc login command for kubeadmin user
 ```
-## Additional Commands
+## Appendix
+- Time calculation
+   - Time it takes to launch everything from scratch : ~15 minutes
+   - Time it takes to destroy everything  : ~7 minutes
+   - Time it takes to launch CRC on existing EBS volume : ~10 minutes
+
+- Cost Calculation
+  - AWS Spot Instance cost for c5n.metal instance type : $0.90 / Running Hour
+  - AWS EBS cost for 100GB of gp2 : $11.40
+
+
 - SSH into the instance
 ```
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal"  --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
@@ -218,9 +228,8 @@ ssh fedora@$EIP
 ssh  fedora@$EIP cat /var/log/crc_status
 ssh  fedora@$EIP tail -f /var/log/crc_setup.log
 ssh  fedora@$EIP tail -f /var/log/cloud-init-output.log
-ssh  fedora@$EIP wget https://gist.githubusercontent.com/ksingh7/7245aabdf6b9772ca8ef3c4df998d2fa/raw/1e63ba398edd229bf47e9ce99d2ad9d282e7ccc8/pull-secret.txt
 ```
 
 ### Todo
-- add tags to instance
-- destroy.sh , search by tag instead of instance type
+- Add support for GCP preemptible instances
+- Add a default password for `kubeadmin` while setting up CRC
