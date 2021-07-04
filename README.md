@@ -119,7 +119,56 @@ Starting HAPROXY Service ...
 bash launch.sh -r ap-south-1 -a ap-south-1a -v false  
 9.87s user 12.99s system 3% cpu 9:55.69 total
 ```
+## Configure Local Machine to remotely connect to CRC Instance
+- Instructions for `MacOS`
+```
+brew install dnsmasq
+mkdir -p /usr/local/etc/dnsmasq.d
+touch /usr/local/etc/dnsmasq.d/crc.conf
+EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal"  --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
+echo "address=/apps-crc.testing/$EIP" > /usr/local/etc/dnsmasq.d/crc.conf ;
+echo "address=/api.crc.testing/$EIP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
+sudo brew services restart dnsmasq ;
+dig apps-crc.testing @127.0.0.1 ;
+dig console-openshift-console.apps-crc.testing @127.0.0.1 ;
 
+oc login -u developer -p developer https://api.crc.testing:6443
+```
+- Instructions for Linux `Fedora`
+```
+sudo dnf install dnsmasq
+
+sudo tee /etc/NetworkManager/conf.d/use-dnsmasq.conf &>/dev/null <<EOF
+[main]
+dns=dnsmasq
+EOF
+
+EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal"  --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
+
+sudo tee /etc/NetworkManager/dnsmasq.d/crc.conf &>/dev/null <<EOF
+address=/apps-crc.testing/$EIP
+address=/api.crc.testing/$EIP
+EOF
+
+sudo systemctl reload NetworkManager
+```
+- Connect to CRC OpenShift running on Spot Instance using OpenShift CLI `oc`
+```
+Develoer Account
+-----------------
+oc login -u developer -p developer https://api.crc.testing:6443
+
+# Open OpenShift Console in your local browser
+# URL : https://console-openshift-console.apps-crc.testing
+# username : developer
+# password : developer
+
+Kubeadmin Account
+------------------
+ssh fedora@$EIP crc console --credentials
+# Get oc login command for kubeadmin user
+```
+  - OpenShift console URL `https://console-openshift-console.apps-crc.testing`
 ## Destroy your CRC Spot Instance
 When you are not using your CRC instance provisioned using OpenSpot, you can destroy that to save cost.
 
@@ -158,55 +207,6 @@ Deleting Security Group... [Done]
 bash destroy.sh -r ap-south-1 -a ap-south-1a -d false -v false  
 7.08s user 8.30s system 62% cpu 24.693 total
 ```
-### Configure Local Machine to use CRC running on Spot Instance
-- Instructions for `MacOS`
-```
-brew install dnsmasq
-mkdir -p /usr/local/etc/dnsmasq.d
-touch /usr/local/etc/dnsmasq.d/crc.conf
-EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal"  --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
-echo "address=/apps-crc.testing/$EIP" > /usr/local/etc/dnsmasq.d/crc.conf ;
-echo "address=/api.crc.testing/$EIP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
-sudo brew services restart dnsmasq ;
-dig apps-crc.testing @127.0.0.1 ;
-dig console-openshift-console.apps-crc.testing @127.0.0.1 ;
-
-oc login -u developer -p developer https://api.crc.testing:6443
-```
-- Instructions for Linux `Fedora`
-```
-sudo dnf install dnsmasq
-
-sudo tee /etc/NetworkManager/conf.d/use-dnsmasq.conf &>/dev/null <<EOF
-[main]
-dns=dnsmasq
-EOF
-
-EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=c5n.metal"  --query "Reservations[*].Instances[*].PublicIpAddress" --output=text) ; 
-
-sudo tee /etc/NetworkManager/dnsmasq.d/crc.conf &>/dev/null <<EOF
-address=/apps-crc.testing/$EIP
-address=/api.crc.testing/$EIP
-EOF
-
-sudo systemctl reload NetworkManager
-```
-- Connect to CRC OpenShift running on Spot Instance
-```
-Develoer Account
------------------
-oc login -u developer -p developer https://api.crc.testing:6443
-
-# Open OpenShift Console in your local browser
-# URL : https://console-openshift-console.apps-crc.testing
-# username : developer
-# password : developer
-
-Kubeadmin Account
-------------------
-ssh fedora@$EIP crc console --credentials
-# Get oc login command for kubeadmin user
-```
 ## Appendix
 - Time calculation
    - Time it takes to launch everything from scratch : ~15 minutes
@@ -229,7 +229,6 @@ ssh  fedora@$EIP cat /var/log/crc_status
 ssh  fedora@$EIP tail -f /var/log/crc_setup.log
 ssh  fedora@$EIP tail -f /var/log/cloud-init-output.log
 ```
-
 ### Todo
 - Add support for GCP preemptible instances
 - Add a default password for `kubeadmin` while setting up CRC
