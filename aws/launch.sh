@@ -113,7 +113,6 @@ sleep 10
 
 echo "Applying TAG to Instance"
 EC2_INSTANCE_ID=$(aws --region=$REGION ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
-echo $EC2_INSTANCE_ID
 aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags 'Key=environment,Value=crc' 'Key=availability-zone,Value=$AZ_NAME' > /dev/null
 
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
