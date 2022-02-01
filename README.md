@@ -122,7 +122,7 @@ bash launch.sh -r ap-south-1 -a ap-south-1a -v false
 ## Configure Local Machine to remotely connect to CRC Instance
 - Automated Instructions for Macos Client to connect to CRC Instance
 ```
-bash mac_client.sh
+bash aws/mac_client.sh
 ```
 - Manual Instructions for configuring `MacOS` client to connet to remote CRC
 ```
