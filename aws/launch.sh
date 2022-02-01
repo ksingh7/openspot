@@ -76,7 +76,7 @@ if [[ "$IS_SG_EXISTS" == "crc-sg" ]]; then
 else
     echo "Creating Security Group ..."
     SG_ID=$(aws ec2 create-security-group --group-name crc-sg --description "CRC Security Group" --tag-specifications 'ResourceType=security-group,Tags=[{Key="environment",Value="crc"}]'  | jq -r .GroupId)
-    for PORT in 22 80 443 6443 ; do aws ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port $PORT --cidr '0.0.0.0/0' --output text ; done
+    for PORT in 22 80 443 6443 ; do aws ec2 authorize-security-group-ingress --group-id $SG_ID --protocol tcp --port $PORT --cidr '0.0.0.0/0' --output text > /dev/null 2>&1 ; done
 fi
 
 echo "Generating User-Data script file ..."

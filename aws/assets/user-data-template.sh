@@ -94,10 +94,11 @@ sudo -u fedora crc config set cpus $CPU >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config set memory $MEMORY >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config set enable-cluster-monitoring true >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config set consent-telemetry yes >> /var/log/crc_setup.log 2>&1
+sudo -u fedora crc config set kubeadmin-password kubeadmin >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config view >> /var/log/crc_setup.log 2>&1
 
 sudo -u fedora echo "===== Starting CRC ... Please wait ====" >> /var/log/crc_setup.log 2>&1
-sudo https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/pull-secret.txt -O /home/fedora/pull-secret.txt
+sudo -u fedora wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/pull-secret.txt -O /home/fedora/pull-secret.txt
 sudo -u fedora bash /home/fedora/post_install.sh /home/fedora/pull-secret.txt true  >> /var/log/crc_setup.log 2>&1
 
 if [[ "$POST_INSTALL" == "true" ]]; then
@@ -105,8 +106,8 @@ if [[ "$POST_INSTALL" == "true" ]]; then
     #sudo -u fedora bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now Exit from logs tail command by presing Ctrl+C ====" >> /var/log/crc_setup.log 2>&1
 else
-    sudo https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
-    sudo  +x /home/fedora/post_install.sh
+    sudo -u fedora wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
+    sudo -u fedora chmod +x /home/fedora/post_install.sh
     sudo -u fedora echo "===== CRC Setup Completed ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now SSH into the instance for post installation setup ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== Post Installation scrip file location : /home/fedora/post_install.sh ====" >> /var/log/crc_setup.log 2>&1
