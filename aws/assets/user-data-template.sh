@@ -10,15 +10,16 @@ touch  /var/log/crc_status
 chown fedora:fedora /var/log/crc_status 
 echo "progressing" >> /var/log/crc_status 2>&1 
 
-echo "Installing required packages ... [Done]"  >> /var/log/crc_setup.log 2>&1
+echo "Installing required packages ..."  >> /var/log/crc_setup.log 2>&1
 dnf update -y > /dev/null 2>&1
 dnf install -y NetworkManager wget git haproxy vim unzip bc libvirt libvirt-daemon-kvm qemu-kvm libguestfs-tools guestfs-tools  /usr/sbin/semanage > /dev/null 2>&1
+echo "Installing required packages ... [Done]"  >> /var/log/crc_setup.log 2>&1
 
-echo "Setting up AWS Cli... [Done]"  >> /var/log/crc_setup.log 2>&1
+echo "Setting up AWS Cli..."  >> /var/log/crc_setup.log 2>&1
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/awscliv2.zip" > /dev/null 2>&1
 unzip /awscliv2.zip > /dev/null 2>&1
 ./aws/install > /dev/null 2>&1
-
+echo "Setting up AWS Cli... [Done]"  >> /var/log/crc_setup.log 2>&1
 #EBS_VOLUME_ID=$(aws --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:VolumeId}" --output text)
 
 EBS_VOLUME_ID=$(aws  --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=AZ_NAME" --query "Volumes[*].{ID:VolumeId}" --output text)

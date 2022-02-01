@@ -1,4 +1,5 @@
 #!/bin/bash -x
+EBS_SIZE=100
 set -x 
 rm  /var/log/crc* > /dev/null 2>&1
 rm -rf aws* > /dev/null 2>&1
@@ -28,7 +29,7 @@ if [ -n "$EBS_VOLUME_ID" ]; then
     echo "Using existing EBS Volume ..."  >> /var/log/crc_setup.log 2>&1
 else
     echo "Creating EBS Volume for CRC ..."  >> /var/log/crc_setup.log 2>&1
-    aws --region=ap-south-1 ec2 create-volume --volume-type gp2 --size 200 --availability-zone ap-south-1a --tag-specifications 'ResourceType=volume,Tags=[{Key="environment",Value="crc"}]'   >> /var/log/crc_setup.log 2>&1
+    aws --region=ap-south-1 ec2 create-volume --volume-type gp2 --size $EBS_SIZE --availability-zone ap-south-1a --tag-specifications 'ResourceType=volume,Tags=[{Key="environment",Value="crc"}]'   >> /var/log/crc_setup.log 2>&1
 fi
 sleep 10
 
@@ -94,18 +95,21 @@ sudo -u fedora crc config set enable-cluster-monitoring true >> /var/log/crc_set
 sudo -u fedora crc config set consent-telemetry yes >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config view >> /var/log/crc_setup.log 2>&1
 
+sudo -u fedora echo "===== Starting CRC ... Please wait ====" >> /var/log/crc_setup.log 2>&1
+sudo https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/pull-secret.txt -O /home/fedora/pull-secret.txt
+sudo -u fedora bash /home/fedora/post_install.sh /home/fedora/pull-secret.txt true  >> /var/log/crc_setup.log 2>&1
+
 if [[ "$POST_INSTALL" == "true" ]]; then
-    sudo -u fedora echo "===== Running Post Install ... Please wait ====" >> /var/log/crc_setup.log 2>&1
-    sudo -u fedora bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
+    #sudo -u fedora echo "===== Running Post Install ... Please wait ====" >> /var/log/crc_setup.log 2>&1
+    #sudo -u fedora bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now Exit from logs tail command by presing Ctrl+C ====" >> /var/log/crc_setup.log 2>&1
 else
-    sudo -u wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
-    sudo -u chmod +x /home/fedora/post_install.sh
+    sudo https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
+    sudo  +x /home/fedora/post_install.sh
     sudo -u fedora echo "===== CRC Setup Completed ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now SSH into the instance for post installation setup ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== Post Installation scrip file location : /home/fedora/post_install.sh ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now Exit from logs tail command by presing Ctrl+C ====" >> /var/log/crc_setup.log 2>&1
-
 fi
 
 echo "completed" > /var/log/crc_status 2>&1 
