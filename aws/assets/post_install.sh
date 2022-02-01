@@ -16,16 +16,16 @@ fi
 echo "Setting up CRC ... "
 crc setup
 
-
-
 if [ -n "$PULL_SECRET_PATH" ]; then
     echo "Starting CRC ... "
     crc config set pull-secret-file $PULL_SECRET_PATH
     crc start
+    CRC_IP=$(crc ip)
 elif  [ -f "$DEFAULT_PULL_SECRET_FILE" ]; then
     echo "Starting CRC ... "
     crc config set pull-secret-file $DEFAULT_PULL_SECRET_FILE
     crc start
+    CRC_IP=$(crc ip)
 else
     echo "Error: CRC Pull Secret not provided, Exiting..." 
     echo "Get your pull secret from https://cloud.redhat.com/openshift/create/local and save it as ~/pull-secret.txt"
@@ -60,7 +60,6 @@ sleep 10
 
 echo "Setting up HAPROXY on host machine ..."
 SERVER_IP=0.0.0.0
-CRC_IP=$(crc ip)
 sudo cp /etc/haproxy/haproxy.cfg{,.bak}
 sudo semanage port -a -t http_port_t -p tcp 6443
 sudo tee /etc/haproxy/haproxy.cfg &>/dev/null <<EOF
