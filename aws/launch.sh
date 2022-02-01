@@ -98,8 +98,8 @@ sed -i ' ' 's/AMI_ID/'$AMI_ID'/' assets/spot-instance-specification.json
 echo "Launching SPOT Instance, Please Wait ..."
 sleep 10
 aws ec2 request-spot-instances --availability-zone-group $REGION  --instance-count 1 --type "one-time" --launch-specification file://assets/spot-instance-specification.json  --tag-specifications 'ResourceType=spot-instances-request,Tags=[{Key="environment",Value="crc"}]' > /dev/null
-rm assets/spot-instance-specification.json
-rm assets/user-data.sh
+rm -f assets/spot-instance-specification.json
+rm -f assets/user-data.sh
 
 # Todo : If instance is not provisioned due to capacity or other issues,
 # Add logic to delete last spot request and submit a new one
@@ -112,7 +112,9 @@ echo "Trying to tail instance setup logs ... "
 sleep 10
 
 echo "Applying TAG to Instance"
-aws ec2 create-tags --resources $INSTANCE_ID --tags 'Key=environment,Value=crc' 'Key=availability-zone,Value=$AZ_NAME' > /dev/null
+EC2_INSTANCE_ID=$(aws --region=$REGION ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
+echo $EC2_INSTANCE_ID
+aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags 'Key=environment,Value=crc' 'Key=availability-zone,Value=$AZ_NAME' > /dev/null
 
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
 ssh  fedora@$EIP tail -50f /var/log/crc_setup.log

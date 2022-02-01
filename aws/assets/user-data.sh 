@@ -1,5 +1,4 @@
 #!/bin/bash -x
-EBS_SIZE=100
 set -x 
 rm  /var/log/crc* > /dev/null 2>&1
 rm -rf aws* > /dev/null 2>&1
@@ -19,28 +18,28 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/awscliv2.zi
 unzip /awscliv2.zip > /dev/null 2>&1
 ./aws/install > /dev/null 2>&1
 
-#EBS_VOLUME_ID=$(aws --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:VolumeId}" --output text)
+#EBS_VOLUME_ID=$(aws --region=ap-south-1 ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:VolumeId}" --output text)
 
-EBS_VOLUME_ID=$(aws  --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=AZ_NAME" --query "Volumes[*].{ID:VolumeId}" --output text)
+EBS_VOLUME_ID=$(aws  --region=ap-south-1 ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=ap-south-1a" --query "Volumes[*].{ID:VolumeId}" --output text)
 
-#EBS_VOLUME_AZ=$(aws --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:AvailabilityZone}" --output text)
+#EBS_VOLUME_AZ=$(aws --region=ap-south-1 ec2 describe-volumes --filters "Name=tag:environment,Values=crc" --query "Volumes[*].{ID:AvailabilityZone}" --output text)
 
 if [ -n "$EBS_VOLUME_ID" ]; then
     echo "Using existing EBS Volume ..."  >> /var/log/crc_setup.log 2>&1
 else
     echo "Creating EBS Volume for CRC ..."  >> /var/log/crc_setup.log 2>&1
-    aws --region=REGION ec2 create-volume --volume-type gp2 --size $EBS_SIZE --availability-zone AZ_NAME --tag-specifications 'ResourceType=volume,Tags=[{Key="environment",Value="crc"}]'   >> /var/log/crc_setup.log 2>&1
+    aws --region=ap-south-1 ec2 create-volume --volume-type gp2 --size 200 --availability-zone ap-south-1a --tag-specifications 'ResourceType=volume,Tags=[{Key="environment",Value="crc"}]'   >> /var/log/crc_setup.log 2>&1
 fi
 sleep 10
 
-EC2_INSTANCE_ID=$(aws --region=REGION ec2 describe-instances --filters "Name=instance-type,Values=INSTANCE_TYPE" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
+EC2_INSTANCE_ID=$(aws --region=ap-south-1 ec2 describe-instances --filters "Name=instance-type,Values=INSTANCE_TYPE" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{Instance:InstanceId}' --output text)
 echo "Instance ID :" $EC2_INSTANCE_ID  >> /var/log/crc_setup.log 2>&1
 
-EBS_VOLUME_ID=$(aws  --region=REGION ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=AZ_NAME" --query "Volumes[*].{ID:VolumeId}" --output text)
+EBS_VOLUME_ID=$(aws  --region=ap-south-1 ec2 describe-volumes --filters "Name=tag:environment,Values=crc" "Name=availability-zone,Values=ap-south-1a" --query "Volumes[*].{ID:VolumeId}" --output text)
 echo "EBS Volume ID :"$EBS_VOLUME_ID  >> /var/log/crc_setup.log 2>&1
 
 echo "Attaching EBS Volume to CRC Spot Instance ..." >> /var/log/crc_setup.log 2>&1
-aws --region=REGION ec2 attach-volume --volume-id $EBS_VOLUME_ID --instance-id $EC2_INSTANCE_ID --device /dev/xvdb >> /var/log/crc_setup.log 2>&1
+aws --region=ap-south-1 ec2 attach-volume --volume-id $EBS_VOLUME_ID --instance-id $EC2_INSTANCE_ID --device /dev/xvdb >> /var/log/crc_setup.log 2>&1
 
 sleep 10
 
@@ -95,21 +94,18 @@ sudo -u fedora crc config set enable-cluster-monitoring true >> /var/log/crc_set
 sudo -u fedora crc config set consent-telemetry yes >> /var/log/crc_setup.log 2>&1
 sudo -u fedora crc config view >> /var/log/crc_setup.log 2>&1
 
-sudo -u fedora echo "===== Starting CRC ... Please wait ====" >> /var/log/crc_setup.log 2>&1
-sudo https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/pull-secret.txt -O /home/fedora/pull-secret.txt
-sudo -u fedora bash /home/fedora/post_install.sh /home/fedora/pull-secret.txt true  >> /var/log/crc_setup.log 2>&1
-
 if [[ "$POST_INSTALL" == "true" ]]; then
-    #sudo -u fedora echo "===== Running Post Install ... Please wait ====" >> /var/log/crc_setup.log 2>&1
-    #sudo -u fedora bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
+    sudo -u fedora echo "===== Running Post Install ... Please wait ====" >> /var/log/crc_setup.log 2>&1
+    sudo -u fedora bash /home/fedora/post_install.sh  >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now Exit from logs tail command by presing Ctrl+C ====" >> /var/log/crc_setup.log 2>&1
 else
-    sudo https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
-    sudo  +x /home/fedora/post_install.sh
+    sudo -u wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/assets/post_install.sh -O /home/fedora/post_install.sh
+    sudo -u chmod +x /home/fedora/post_install.sh
     sudo -u fedora echo "===== CRC Setup Completed ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now SSH into the instance for post installation setup ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== Post Installation scrip file location : /home/fedora/post_install.sh ====" >> /var/log/crc_setup.log 2>&1
     sudo -u fedora echo "===== You can now Exit from logs tail command by presing Ctrl+C ====" >> /var/log/crc_setup.log 2>&1
+
 fi
 
 echo "completed" > /var/log/crc_status 2>&1 

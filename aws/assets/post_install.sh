@@ -37,11 +37,11 @@ if [ ! -f "$CRC_XML_FILE" ]; then
     crc stop
     
     if [[ "$EXPAND_CRC_DISK_SIZE" == "true" ]]; then
-        echo "Expanding CRC ROOT Disk Size by +40G ..."
+        echo "Expanding CRC ROOT Disk Size by +60G ..."
         # Increase DISK size
         CRC_MACHINE_IMAGE=${HOME}/.crc/machines/crc/crc.qcow2
         # This resize is thin-provisioned
-        sudo qemu-img resize ${CRC_MACHINE_IMAGE} +40G
+        sudo qemu-img resize ${CRC_MACHINE_IMAGE} +60G
         sudo cp ${CRC_MACHINE_IMAGE} ${CRC_MACHINE_IMAGE}.ORIGINAL  
         #increase the /dev/sda4 (known as vda4 in the VM) disk partition size by an additional 20GB
         sudo virt-resize --expand /dev/sda4 ${CRC_MACHINE_IMAGE}.ORIGINAL ${CRC_MACHINE_IMAGE}
