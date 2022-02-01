@@ -103,7 +103,7 @@ The server is accessible via web console at:
 
 Log in as administrator:
   Username: kubeadmin
-  Password: wR3yN-HUxoo-HXktK-QNw3e
+  Password: kubeadmin
 
 Log in as user:
   Username: developer
@@ -120,7 +120,11 @@ bash launch.sh -r ap-south-1 -a ap-south-1a -v false
 9.87s user 12.99s system 3% cpu 9:55.69 total
 ```
 ## Configure Local Machine to remotely connect to CRC Instance
-- Instructions for `MacOS`
+- Automated Instructions for Macos Client to connect to CRC Instance
+```
+bash mac_client.sh
+```
+- Manual Instructions for configuring `MacOS` client to connet to remote CRC
 ```
 brew install dnsmasq
 mkdir -p /usr/local/etc/dnsmasq.d
@@ -131,10 +135,13 @@ echo "address=/api.crc.testing/$EIP" >> /usr/local/etc/dnsmasq.d/crc.conf ;
 sudo brew services restart dnsmasq ;
 dig apps-crc.testing @127.0.0.1 ;
 dig console-openshift-console.apps-crc.testing @127.0.0.1 ;
-
+```
+- Login to OC
+```
+oc login -u kubeadmin -p kubeadmin https://api.crc.testing:6443
 oc login -u developer -p developer https://api.crc.testing:6443
 ```
-- Instructions for Linux `Fedora`
+- Manual Instructions for Linux `Fedora`
 ```
 sudo dnf install dnsmasq
 
@@ -231,4 +238,3 @@ ssh  fedora@$EIP tail -f /var/log/cloud-init-output.log
 ```
 ### Todo
 - Add support for GCP preemptible instances
-- Add a default password for `kubeadmin` while setting up CRC
