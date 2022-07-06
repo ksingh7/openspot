@@ -104,6 +104,16 @@ sudo -u fedora wget https://raw.githubusercontent.com/ksingh7/openspot/main/aws/
 sudo -u fedora bash /home/fedora/post_install.sh /home/fedora/pull-secret.txt true  >> /var/log/crc_setup.log 2>&1
 
 sudo -u fedora echo "===== CRC Setup Completed ====" >> /var/log/crc_setup.log 2>&1
+sudo -u fedora echo "#############################################################################################" >> /var/log/crc_setup.log 2>&1
+sudo -u fedora echo "### You should now configure your local machine DNS records inorder to use this CRC instance ###" >> /var/log/crc_setup.log 2>&1
+sudo -u fedora echo "### If you are using MacOS, please execute mac_client.sh script to configure your local DNS       ###" >> /var/log/crc_setup.log 2>&1
+sudo -u fedora echo "#############################################################################################" >> /var/log/crc_setup.log 2>&1
+
+#################################################################################
+### You should now configure your local machine DNS records inorder to use this CRC instance ###
+### If you are using MacOS, please execute mac_client.sh script to configure your local DNS       ###
+#################################################################################
+
 
 # if [[ "$POST_INSTALL" == "true" ]]; then
 #     #sudo -u fedora echo "===== Running Post Install ... Please wait ====" >> /var/log/crc_setup.log 2>&1

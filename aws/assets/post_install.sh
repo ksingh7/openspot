@@ -54,6 +54,7 @@ if [ ! -f "$CRC_XML_FILE" ]; then
     sudo virsh dumpxml crc > ~/crc.xml
     echo "Starting CRC ... "
     crc config set pull-secret-file $DEFAULT_PULL_SECRET_FILE
+    crc start
 fi
 
 sleep 10
