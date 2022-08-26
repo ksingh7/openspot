@@ -6,11 +6,12 @@ main() {
 #REGION=$1
 #AZ_NAME=$2
 #DEBUG=$3
+#AMI_ID=ami-01d3bd808e1fd393c # Default Fedora-Cloud-Base-34-1.2.x86_64-hvm-ap-south-1-gp2-0
+#AMI_ID=ami-0de1a1ee38e9d0267 # ap-southeast-1 Fedora-Cloud-Base-34-1.2.x86_64-hvm-ap-southeast-1-gp2-0 
 
 KEY_PAIR_NAME="crc-key-pair"
 AWS_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query "Account" --output text)
 INSTANCE_TYPE=c5n.metal  #cheapest x86 baremetal instance from AWS
-AMI_ID=ami-01d3bd808e1fd393c
 
 if [ "$DEBUG" == "true"  ]; then
     echo "Enabling Verbose output ..."
@@ -38,6 +39,13 @@ if [ -n "$AZ_NAME" ]; then
 else
     AZ_NAME="$REGION"a
     echo "No AZ provided, launching instance in AZ : $AZ_NAME ..."
+fi
+
+if [ -n "$AMI_ID" ]; then
+    :
+else
+    AMI_ID=ami-01d3bd808e1fd393c
+    echo "Using default AMI ID : $AMI_ID -- Fedora-Cloud-Base-34-1.2.x86_64-hvm-ap-south-1-gp2-0"
 fi
 
 if [ -z $PUB_KEY_PATH ]; then
@@ -127,11 +135,12 @@ cat << EOT
     -r "AWS Region Name : Optional, if not provided, will use AWS CLI default value"
     -a "AWS Availablity Zone Name : Optional, if not provided, will use AWS CLI default value"
     -v "Optional : Verbose Output, set either true or false, default value is false"
+    -i "Optional : AMI ID to use, default: ami-01d3bd808e1fd393c Fedora-Cloud-Base-34-1.2.x86_64-hvm-ap-south-1-gp2-0"
     -h "Show help menu"
 EOT
 }
 
-while getopts r:a:v:h option; do
+while getopts r:a:v:h:i: option; do
     case $option in
         r)
             REGION="$OPTARG"
@@ -141,6 +150,9 @@ while getopts r:a:v:h option; do
             ;;
         v)
             DEBUG="$OPTARG"
+            ;;
+        i)
+            AMI_ID="$OPTARG"
             ;;
         \?)
             echo "wrong option."
