@@ -3,6 +3,7 @@
 # Author: karan.singh731987@gmail.com , karan@redhat.com (Karan Singh)
 
 main() {
+OS=$(uname)
 #REGION=$1
 #AZ_NAME=$2
 #DEBUG=$3
@@ -52,13 +53,15 @@ if [ -z $PUB_KEY_PATH ]; then
     echo "Need your SSH Public Key absolute path to create AWS Key Pair in the selected Region (ex: $HOME/.ssh/id_rsa.pub) : "
     read -p "Enter SSH Public Key Path [$HOME/.ssh/id_rsa.pub]: " PUB_KEY_PATH
     PUB_KEY_PATH=${PUB_KEY_PATH:-$HOME/.ssh/id_rsa.pub}
-    if [ -a  $PUB_KEY_PATH ]; then
-        aws --region $REGION ec2 import-key-pair --key-name $KEY_PAIR_NAME --public-key-material fileb://$PUB_KEY_PATH --tag-specifications 'ResourceType=key-pair,Tags=[{Key="environment",Value="crc"}]' > /dev/null
-        echo "New key-pair named "$KEY_PAIR_NAME" created in region "$REGION"..."
-    else
-        echo "Invalid SSH Public Key path or Key file does not exists ... exiting"
-        exit 1
-    fi
+fi
+
+#in this way if $PUB_KEY_PATH is set from outside the script the path won't be asked (useful for CI/CD pipelines and unattended installations)
+if [ -a  $PUB_KEY_PATH ]; then
+    aws --region $REGION ec2 import-key-pair --key-name $KEY_PAIR_NAME --public-key-material fileb://$PUB_KEY_PATH --tag-specifications 'ResourceType=key-pair,Tags=[{Key="environment",Value="crc"}]' > /dev/null
+    echo "New key-pair named "$KEY_PAIR_NAME" created in region "$REGION"..."
+else
+    echo "Invalid SSH Public Key path or Key file does not exists ... exiting"
+    exit 1
 fi
 
 if [[ "$IS_IAM_ROLE_EXISTS" == "crc-ec2-volume-role" ]]; then
@@ -88,21 +91,39 @@ else
 fi
 
 echo "Generating User-Data script file ..."
-sed 's/REGION/'$REGION'/g' assets/user-data-template.sh > assets/user-data.sh
-sed -i ' ' 's/AZ_NAME/'$AZ_NAME'/g' assets/user-data.sh
-sed -i ' ' 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/g' assets/user-data.sh
-USER_DATA_BASE_64=$(base64 assets/user-data.sh)
-
-## Todo - Improve this
-echo "Generating Launch Specification file ..."
-sed 's/SG_ID/'$SG_ID'/' assets/spot-instance-specification-template.json > assets/spot-instance-specification.json
-sed -i ' ' 's/KEY_PAIR_NAME/'$KEY_PAIR_NAME'/' assets/spot-instance-specification.json
-sed -i ' ' 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/' assets/spot-instance-specification.json
-sed -i ' ' 's/AWS_ACCOUNT_NUMBER/'$AWS_ACCOUNT_NUMBER'/' assets/spot-instance-specification.json
-sed -i ' ' 's/USER_DATA_BASE_64/'$USER_DATA_BASE_64'/' assets/spot-instance-specification.json
-sed -i ' ' 's/AZ_NAME/'$AZ_NAME'/' assets/spot-instance-specification.json
-sed -i ' ' 's/AMI_ID/'$AMI_ID'/' assets/spot-instance-specification.json
-
+if [[ $OS == "Linux" ]]
+    then
+	sed 's/REGION/'$REGION'/g' assets/user-data-template.sh > assets/user-data.sh
+	sed -i 's/AZ_NAME/'$AZ_NAME'/g' assets/user-data.sh
+	sed -i 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/g' assets/user-data.sh
+    USER_DATA_BASE_64=$(base64 assets/user-data.sh)
+	## Todo - Improve this (replacing should be made with jq)
+	echo "Generating Launch Specification file ..."
+	sed 's/SG_ID/'$SG_ID'/' assets/spot-instance-specification-template.json > assets/spot-instance-specification.json
+	sed -i 's/KEY_PAIR_NAME/'$KEY_PAIR_NAME'/' assets/spot-instance-specification.json
+	sed -i 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/' assets/spot-instance-specification.json
+	sed -i 's/AWS_ACCOUNT_NUMBER/'$AWS_ACCOUNT_NUMBER'/' assets/spot-instance-specification.json
+    #used awk to avoid strange behaviour on escape characters 
+    #new lines replaced in the variable expansion with tr (escaped)
+	awk -i inplace -v DATA_BASE_64="${USER_DATA_BASE_64//[$'\t\r\n ']}" '{ sub(/USER_DATA_BASE_64/, DATA_BASE_64); print; }' assets/spot-instance-specification.json
+	sed -i 's/AZ_NAME/'$AZ_NAME'/' assets/spot-instance-specification.json
+	sed -i 's/AMI_ID/'$AMI_ID'/' assets/spot-instance-specification.json
+else
+    #Not sure if these sed calls are meant to work with BSD sed but on linux they seem to not work
+	sed 's/REGION/'$REGION'/g' assets/user-data-template.sh > assets/user-data.sh
+	sed -i ' ' 's/AZ_NAME/'$AZ_NAME'/g' assets/user-data.sh
+	sed -i ' ' 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/g' assets/user-data.sh
+    USER_DATA_BASE_64=$(base64 assets/user-data.sh)
+	## Todo - Improve this
+	echo "Generating Launch Specification file ..."
+	sed 's/SG_ID/'$SG_ID'/' assets/spot-instance-specification-template.json > assets/spot-instance-specification.json
+	sed -i ' ' 's/KEY_PAIR_NAME/'$KEY_PAIR_NAME'/' assets/spot-instance-specification.json
+	sed -i ' ' 's/INSTANCE_TYPE/'$INSTANCE_TYPE'/' assets/spot-instance-specification.json
+	sed -i ' ' 's/AWS_ACCOUNT_NUMBER/'$AWS_ACCOUNT_NUMBER'/' assets/spot-instance-specification.json
+	sed -i ' ' 's/USER_DATA_BASE_64/'$USER_DATA_BASE_64'/' assets/spot-instance-specification.json
+	sed -i ' ' 's/AZ_NAME/'$AZ_NAME'/' assets/spot-instance-specification.json
+	sed -i ' ' 's/AMI_ID/'$AMI_ID'/' assets/spot-instance-specification.json
+fi
 echo "Launching SPOT Instance, Please Wait ..."
 sleep 10
 aws ec2 request-spot-instances --availability-zone-group $REGION  --instance-count 1 --type "one-time" --launch-specification file://assets/spot-instance-specification.json  --tag-specifications 'ResourceType=spot-instances-request,Tags=[{Key="environment",Value="crc"}]' > /dev/null
@@ -124,7 +145,7 @@ EC2_INSTANCE_ID=$(aws --region=$REGION ec2 describe-instances --filters "Name=in
 aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags 'Key=environment,Value=crc' 'Key=availability-zone,Value=$AZ_NAME' > /dev/null
 
 EIP=$(aws ec2 describe-instances --filters "Name=instance-type,Values=$INSTANCE_TYPE" "Name=availability-zone,Values=$AZ_NAME" --query "Reservations[*].Instances[*].PublicIpAddress" --output=text)
-ssh  fedora@$EIP tail -50f /var/log/crc_setup.log
+ssh -o "StrictHostKeyChecking no" fedora@$EIP tail -50f /var/log/crc_setup.log
 
 }
 
