@@ -68,6 +68,7 @@ cd openspot/aws
     -a "AWS Availablity Zone Name : Optional, if not provided, will use AWS CLI default value"
     -v "Optional : Verbose Output, set either true or false, default value is false"
     -h "Show help menu"
+    -i "AMI ID"
 ```
 - To launch AWS Spot Instance in `ap-south-1` region and `ap-south-1a` availablity zone, execute
 ```
